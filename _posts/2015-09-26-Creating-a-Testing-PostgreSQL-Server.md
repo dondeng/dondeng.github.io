@@ -108,6 +108,7 @@ Next we need to firewall the Database Server. Locate the Security Group you crea
 
 ![Databse Server Security Group][1]
 
+
   
 You can now test the connectivity to your database from your web application machine. SSH to the web application server and run:
 
@@ -152,7 +153,7 @@ Replace the IP X.X.X.X with the IP address of the Database Server and the 'portn
 Coming Soon in part II...
 
 
-  [1]: ({{ site.url }}/assets/screenshot.jpg)
+  [1]: ({{ site.url }}/img/posts/db-server-sg-image.png)
   [2]: #f805d223-a7d0-8526-73e9-bb0a44de020c
   [3]: http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json.html#workingcookbook-json-deploy
   [4]: http://www.kopokopo.com
