@@ -25,4 +25,4 @@ I'm also an amateur photographer 'wannabe' and you can find some of [my best pho
 ### Network
 
 Follow me:  
-↪ [github](http://github.com/dondeng) | [twitter](http://twitter.com/donden1) | [500px](https://500px.com/donden1)
+↪ [github](https://github.com/dondeng) | [twitter](http://twitter.com/donden1) | [500px](https://500px.com/donden1)
