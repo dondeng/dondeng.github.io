@@ -8,7 +8,12 @@ categories: rails postgresql
 
 ## AWS RDS is really cool but... $$$ 
 
-We are huge fans of AWS at Kopo Kopo. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages that include but not limited to:
+We are huge fans of AWS at Kopo Kopo. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages listed below.
+However, when it comes to testing and staging environments, is RDS overkill ? I have come to think so.
+
+{{ more }}
+
+RDS offers numerous advactages that include but not limited to:
 
  - Automated backups and point in time recovery ability
  - Multi-AZ availability (redundancy)
@@ -20,7 +25,6 @@ We isolate each client's setup in its own Virtual Private Cloud (VPC) on AWS. Wh
 
 The problem with the above setup is cost. As you get many clients and get multiple staging environments, AWS resources cost go up since the "hands off" database management that RDS affords actually comes at a cost. Well, why should staging environments be accorded RDS resources especially after we learned how our apps behaved? Not to mention the fact, that for a Rails application, there is nothing really magical about where the db is. A rails application merely points to a db in database.yml and this could be a local or remote db. Why not just create a 'Database Server' to serve PostgreSQL databases for all the staging and testing environments ?
 
-{{ more }}
 
 ----------
 
