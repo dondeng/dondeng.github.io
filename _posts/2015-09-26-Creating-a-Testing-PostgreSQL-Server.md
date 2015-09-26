@@ -13,7 +13,7 @@ However, when it comes to testing and staging environments, is RDS overkill ? I 
 
 {{ more }}
 
-RDS offers numerous advactages that include but not limited to:
+RDS offers numerous advantages that include but not limited to:
 
  - Automated backups and point in time recovery ability
  - Multi-AZ availability (redundancy)
@@ -133,11 +133,11 @@ Since our app now does not have an attached database, we have to do it using a c
       "deploy" : {
         "staging_app" : {
           "database" : {
-            "adapter" : "pstgresql",
+            "adapter" : "postgresql",
             "database" : "database-1-name",
             "host" : "X.X.X.X",
             "password" : "password",
-            "port" : portnumber
+            "port" : 9999
             "reconnect" : true,
             "username" : "username"
           }
@@ -146,6 +146,8 @@ Since our app now does not have an attached database, we have to do it using a c
     }
 
 Replace the IP X.X.X.X with the IP address of the Database Server and the 'portnumber' with the port number you used above to run postgres. With this, upon deployment, the database.yml file will be created with the above settings and 
+your application should be able to connect to the said database. You now have a database server that you can have applications from different OpsWorks stacks
+connecting to.
 
 
 ### 2. Using SSH Tunneling
@@ -153,7 +155,7 @@ Replace the IP X.X.X.X with the IP address of the Database Server and the 'portn
 Coming Soon in part II...
 
 
-  [1]: ({{ site.url }}/img/posts/db-server-sg-image.png)
-  [2]: #f805d223-a7d0-8526-73e9-bb0a44de020c
+  [1]: {{ site.url }}/img/posts/db-server-sg-image.png
+  [2]: {{ site.url }}/img/posts/ops-works-no-data-source.png
   [3]: http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json.html#workingcookbook-json-deploy
   [4]: http://www.kopokopo.com
