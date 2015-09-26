@@ -8,7 +8,7 @@ categories: rails postgresql
 
 ## AWS RDS is really cool but... $$$ 
 
-We are huge fans of AWS at Kopo Kopo. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages listed below.
+We are huge fans of AWS at [Kopo Kopo][4]. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages listed below.
 However, when it comes to testing and staging environments, is RDS overkill ? I have come to think so.
 
 {{ more }}
@@ -155,3 +155,4 @@ Coming Soon in part II...
   [1]: ({{ site.url }}/assets/screenshot.jpg)
   [2]: #f805d223-a7d0-8526-73e9-bb0a44de020c
   [3]: http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json.html#workingcookbook-json-deploy
+  [4]: http://www.kopokopo.com
