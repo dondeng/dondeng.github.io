@@ -30,8 +30,10 @@ Start with a base Ubuntu image and create an EC2 instance. You could bring up yo
 
 Install PostgreSQL by running the following commands
 
+{% highlight ruby %}
     sudo apt-get update
     sudo apt-get install -y postgresql postgresql-contrib
+{% endhighlight %}
 
 You then need to create a user that you will be using to access the database(s).
 
