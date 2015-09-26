@@ -20,6 +20,7 @@ We isolate each client's setup in its own Virtual Private Cloud (VPC) on AWS. Wh
 
 The problem with the above setup is cost. As you get many clients and get multiple staging environments, AWS resources cost go up since the "hands off" database management that RDS affords actually comes at a cost. Well, why should staging environments be accorded RDS resources especially after we learned how our apps behaved? Not to mention the fact, that for a Rails application, there is nothing really magical about where the db is. A rails application merely points to a db in database.yml and this could be a local or remote db. Why not just create a 'Database Server' to serve PostgreSQL databases for all the staging and testing environments ?
 
+{{ more }}
 
 ----------
 
