@@ -15,7 +15,7 @@ our application servers. I have become an avid fan of Docker and containerizatio
 
 ## Docker Setup
 
-####Docker setup in Mac OS X
+#### Docker setup in Mac OS X
 
 Installing Docker on Mac not scope of this article but instructions can be found [here.][1] Installation using those instructions are straight forward and worked like a charm with no hiccups. There is no point of re-writing them here.
 
@@ -23,9 +23,9 @@ Installing Docker on Mac not scope of this article but instructions can be found
 
 Likewise, in Ubuntu, Instructions to install Docker on Ubuntu were straight forward as documented in the Docker [documentation][2]
 
-##Elasticsearch setup
+## Elasticsearch setup
 
-####Mac OS X setup
+#### Mac OS X setup
 
 Pull the latest elastic search image using:
 
@@ -113,9 +113,9 @@ Lets say the ip is 192.168.99.100 , you should be able to visit your browser at 
 {% endhighlight %}
 Once Elasticsearch is setup, we can move to the Rails application.
 
-##Rails setup
+## Rails setup
 
-####Setup
+#### Setup
 There is a Ruby elastic search library that we will be using ‘elasticsearch’ which is a wrapper for two separate libraries (elasticsearch-transport and elasticsearch-api)
 
 - [elasticsearch-ruby][5]
@@ -178,7 +178,7 @@ Account.mappings.to_hash
   }
 }
 {% endhighlight %}
-####Indexing
+####  Indexing
 The defined settings and mappings are used to create an index with the desired configuration
 Commands to create and refresh indexes are provided by the name spaced functions:
 {% highlight ruby %}
@@ -266,7 +266,7 @@ With this for example, a call to bulk index the Account model would be:
 {% highlight ruby %}
 Search::BulkIndexer.import('Account')
 {% endhighlight %}
-####Searching
+#### Searching
 A simple search now takes the form 
 {% highlight ruby %}
 Account.search('query_string')
@@ -281,7 +281,7 @@ You can customize the search by sending in more options using the Elasticsearch 
 {% highlight ruby %}
 records = Account.search('query_string').records
 {% endhighlight %}
-####Updating indices
+#### Updating indices
 As the application is used, invariably, the indices need to be updated when records are created/edited/deleted. The gem has callbacks that can be invoked automatically by including 
 {% highlight ruby %}
 include Elasticsearch::Model::Callbacks
