@@ -9,7 +9,7 @@ categories: docker elasticsearch rails
 I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not 
 optimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app on 
 our sphinx server just to run maintenance on our sphinx instance. We had long decided to separate our sphinx server from 
-our application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is 'if you are not using Docker, you should' Setting up Docker in development involved the following process.
+our application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is 'if you are not using Docker, you should at least look into it'. Setting up Docker in development involved the following process.
 
 {{ more }}
 
