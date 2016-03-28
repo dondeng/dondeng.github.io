@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Creating a Testing PostgreSQL Server"
+image: postgres_aws_3.png
 date:   2015-09-26 12:35:35
 categories: rails postgresql
 ---

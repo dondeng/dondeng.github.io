@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Partial Indexes with PostgreSQL and Rails"
+image: postgres_aws_3.png
 date:   2014-07-17 12:35:35
 categories: rails postgresql
 ---

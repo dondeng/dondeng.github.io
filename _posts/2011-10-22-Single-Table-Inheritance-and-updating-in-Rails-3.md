@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Single table inheritance and updating in Rails 3"
+image: postgres_loves_ruby.png
 date:   2011-10-22 12:35:35
 categories: rails 
 ---
