@@ -19,7 +19,7 @@ our application servers. I have become an avid fan of Docker and containerizatio
 
 Installing Docker on Mac not scope of this article but instructions can be found [here.][1] Installation using those instructions are straight forward and worked like a charm with no hiccups. There is no point of re-writing them here.
 
-####Docker setup in Ubuntu
+#### Docker setup in Ubuntu
 
 Likewise, in Ubuntu, Instructions to install Docker on Ubuntu were straight forward as documented in the Docker [documentation][2]
 
@@ -38,6 +38,7 @@ Run the image by mounting a volume to persist the elastic search indexing data. 
 This should work fine. However, I ran into a documented problem regarding mounting docker volumes in Mac OS X. It turns out that there is a permissions problem with Mac OS X and mounting docker volumes when using docker machine on Mac. The error you may get will be similar to the one below:
 
 {% highlight ruby %}
+
 [2016-03-23 14:26:06,882][WARN ][bootstrap] unable to install syscall filter: seccomp unavailable: your kernel is buggy and you should upgrade
 Exception in thread "main" java.lang.IllegalStateException: Unable to access 'path.data' (/usr/share/elasticsearch/data/elasticsearch)
 Likely root cause: java.nio.file.AccessDeniedException: /usr/share/elasticsearch/data/elasticsearch
@@ -58,6 +59,7 @@ Likely root cause: java.nio.file.AccessDeniedException: /usr/share/elasticsearch
     at org.elasticsearch.bootstrap.Bootstrap.init(Bootstrap.java:285)
     at org.elasticsearch.bootstrap.Elasticsearch.main(Elasticsearch.java:35)
 Refer to the log for complete error details
+
 {% endhighlight %}
 
 There is a GitHub issue that explores the problem and solution which can be found [here][3]. The solution involves activating and mounting the shared folder in the virtual machine as NFS. The workaround documented in the issue above, involves doing the following:
