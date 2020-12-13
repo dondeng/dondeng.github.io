@@ -1,8 +1,19 @@
 ---
 permalink: /about/
-title: "About"
+title: "About Nyonura"
 ---
 
-Tempor velit sint sunt ipsum tempor enim ad qui ullamco. Est dolore anim ad velit duis dolore minim sunt aliquip amet commodo labore. Ut eu pariatur aute ea aute excepteur laborum. Esse ea esse excepteur minim mollit qui cillum excepteur ex dolore magna. Labore deserunt fugiat incididunt incididunt sint ea. Consequat dolore aute laboris quis proident quis non et est consectetur ex eiusmod sit culpa.
+---
 
-Cupidatat ea do et in excepteur in. Ad nostrud ut est esse eu duis ea sunt eiusmod. Aliquip tempor veniam sint elit fugiat. Velit incididunt laboris amet incididunt labore dolore irure velit excepteur commodo deserunt laborum. Consectetur eu fugiat veniam veniam Lorem labore magna eiusmod. Ea occaecat reprehenderit pariatur consectetur minim labore ut aliquip.
+![Me](http://www.gravatar.com/avatar/992bdc35354793cea7bdd2a9d5980bab.png?s=200){: .profile .pull-right }
+
+“Nyonura” is a nickname that was given to my late mom (Julia Ondeng - RIP) by my grandfather when she was a child.
+
+I build things using software and yes 'software will eat the world' --Marc Andressen. Currently a lot of the work I am doing is in Ruby on Rails.
+I am interested in financial systems technology and how tech like ML can push the boundaries in this space.
+
+During the day I am the CTO at [Kopo Kopo, Inc.](http://www.kopokopo.com) building awesome software that helps small and medium sized business
+digitze their transactions and build business tools that allow their businesses to grow and prosper.
+
+I'm also an amateur photographer 'wannabe' and you can find some of my best photographs [here](https://500px.com/donden1). Drop me some tips if you fancy!
+

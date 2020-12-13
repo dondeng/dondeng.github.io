@@ -1,0 +1,991 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.21.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Setting up elastic search in Rails using Docker - Nyonura</title>
+<meta name="description" content="I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not optimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app on our sphinx server just to run maintenance on our sphinx instance. We had long decided to separate our sphinx server from our application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is ‘if you are not using Docker, you should at least look into it’. Setting up Docker in development involved the following process.">
+
+
+  <meta name="author" content="Dennis Ondeng">
+  
+  <meta property="article:author" content="Dennis Ondeng">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Nyonura">
+<meta property="og:title" content="Setting up elastic search in Rails using Docker">
+<meta property="og:url" content="http://localhost:4000/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/">
+
+
+  <meta property="og:description" content="I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not optimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app on our sphinx server just to run maintenance on our sphinx instance. We had long decided to separate our sphinx server from our application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is ‘if you are not using Docker, you should at least look into it’. Setting up Docker in development involved the following process.">
+
+
+
+  <meta property="og:image" content="http://localhost:4000/assets/images/post-banners/es_docker.png">
+
+
+
+
+
+  <meta property="article:published_time" content="2016-03-28T15:35:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Nyonura Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Nyonura
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+  
+
+
+
+
+
+
+
+<div class="page__hero"
+  style=" background-image: url('');"
+>
+  
+    <img src="/assets/images/post-banners/es_docker.png" alt="Setting up elastic search in Rails using Docker" class="page__hero-image">
+  
+  
+</div>
+
+
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/images/bio-photo.jpg" alt="Dennis Ondeng" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Dennis Ondeng</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>Technology and other worldly musings of a father, husband and software engineer.</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="https://" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-link" aria-hidden="true"></i><span class="label">Website</span></a></li>
+          
+        
+          
+            <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i><span class="label">Twitter</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Setting up elastic search in Rails using Docker">
+    <meta itemprop="description" content="I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was notoptimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app onour sphinx server just to run maintenance on our sphinx instance. We had long decided to separate our sphinx server fromour application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is ‘if you are not using Docker, you should at least look into it’. Setting up Docker in development involved the following process.">
+    <meta itemprop="datePublished" content="2016-03-28T15:35:35+03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Setting up elastic search in Rails using Docker
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not
+optimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app on
+our sphinx server just to run maintenance on our sphinx instance. We had long decided to separate our sphinx server from
+our application servers. I have become an avid fan of Docker and containerization especially in a micro-service architecurre like ours. Basically my opinion is ‘if you are not using Docker, you should at least look into it’. Setting up Docker in development involved the following process.</p>
+
+<h2 id="docker-setup">Docker Setup</h2>
+
+<h4 id="docker-setup-in-mac-os-x">Docker setup in Mac OS X</h4>
+
+<p>Installing Docker on Mac not scope of this article but instructions can be found <a href="https://docs.docker.com/engine/installation/mac/">here.</a> Installation using those instructions are straight forward and worked like a charm with no hiccups. There is no point of re-writing them here.</p>
+
+<h4 id="docker-setup-in-ubuntu">Docker setup in Ubuntu</h4>
+
+<p>Likewise, in Ubuntu, Instructions to install Docker on Ubuntu were straight forward as documented in the Docker <a href="https://docs.docker.com/engine/installation/linux/ubuntulinux/">documentation</a></p>
+
+<h2 id="elasticsearch-setup">Elasticsearch setup</h2>
+
+<h4 id="mac-os-x-setup">Mac OS X setup</h4>
+
+<p>Pull the latest elastic search image using:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$docker pull elasticsearch
+</code></pre></div></div>
+
+<p>Run the image by mounting a volume to persist the elastic search indexing data. This is so that we can discard our elastic search container at any time without neccessarily losing our search index data since the data will reside in the host machine and not the container.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ docker run -d -p 9200:9200 -v "$PWD/esdata":/usr/share/elasticsearch/data elasticsearch
+</code></pre></div></div>
+
+<p>This should work fine. However, I ran into a documented problem regarding mounting docker volumes in Mac OS X. It turns out that there is a permissions problem with Mac OS X and mounting docker volumes when using docker machine on Mac. The error you may get will be similar to the one below:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="p">[</span><span class="mi">2016</span><span class="o">-</span><span class="mo">03</span><span class="o">-</span><span class="mi">23</span> <span class="mi">14</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mo">06</span><span class="p">,</span><span class="mi">882</span><span class="p">][</span><span class="nb">warn</span> <span class="p">][</span><span class="n">bootstrap</span><span class="p">]</span> <span class="n">unable</span> <span class="n">to</span> <span class="n">install</span> <span class="nb">syscall</span> <span class="ss">filter: </span><span class="n">seccomp</span> <span class="ss">unavailable: </span><span class="n">your</span> <span class="n">kernel</span> <span class="n">is</span> <span class="n">buggy</span> <span class="n">and</span> <span class="n">you</span> <span class="n">should</span> <span class="n">upgrade</span>
+<span class="no">Exception</span> <span class="k">in</span> <span class="n">thread</span> <span class="s2">"main"</span> <span class="n">java</span><span class="p">.</span><span class="nf">lang</span><span class="o">.</span><span class="no">IllegalStateException</span><span class="p">:</span> <span class="no">Unable</span> <span class="n">to</span> <span class="n">access</span> <span class="s1">'path.data'</span> <span class="p">(</span><span class="sr">/usr/s</span><span class="n">hare</span><span class="o">/</span><span class="n">elasticsearch</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">elasticsearch</span><span class="p">)</span>
+<span class="no">Likely</span> <span class="n">root</span> <span class="ss">cause: </span><span class="n">java</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">file</span><span class="o">.</span><span class="no">AccessDeniedException</span><span class="p">:</span> <span class="sr">/usr/s</span><span class="n">hare</span><span class="o">/</span><span class="n">elasticsearch</span><span class="o">/</span><span class="n">data</span><span class="o">/</span><span class="n">elasticsearch</span>
+<span class="n">at</span> <span class="n">sun</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">fs</span><span class="o">.</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">translateToIOException</span><span class="p">(</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">84</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">sun</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">fs</span><span class="o">.</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">rethrowAsIOException</span><span class="p">(</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">102</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">sun</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">fs</span><span class="o">.</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">rethrowAsIOException</span><span class="p">(</span><span class="no">UnixException</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">107</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">sun</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">fs</span><span class="o">.</span><span class="no">UnixFileSystemProvider</span><span class="p">.</span><span class="nf">createDirectory</span><span class="p">(</span><span class="no">UnixFileSystemProvider</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">384</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">file</span><span class="o">.</span><span class="no">Files</span><span class="p">.</span><span class="nf">createDirectory</span><span class="p">(</span><span class="no">Files</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">674</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">file</span><span class="o">.</span><span class="no">Files</span><span class="p">.</span><span class="nf">createAndCheckIsDirectory</span><span class="p">(</span><span class="no">Files</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">781</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">java</span><span class="p">.</span><span class="nf">nio</span><span class="p">.</span><span class="nf">file</span><span class="o">.</span><span class="no">Files</span><span class="p">.</span><span class="nf">createDirectories</span><span class="p">(</span><span class="no">Files</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">767</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Security</span><span class="p">.</span><span class="nf">ensureDirectoryExists</span><span class="p">(</span><span class="no">Security</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">337</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Security</span><span class="p">.</span><span class="nf">addPath</span><span class="p">(</span><span class="no">Security</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">314</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Security</span><span class="p">.</span><span class="nf">addFilePermissions</span><span class="p">(</span><span class="no">Security</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">259</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Security</span><span class="p">.</span><span class="nf">createPermissions</span><span class="p">(</span><span class="no">Security</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">212</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Security</span><span class="p">.</span><span class="nf">configure</span><span class="p">(</span><span class="no">Security</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">118</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">setupSecurity</span><span class="p">(</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">196</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">167</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">init</span><span class="p">(</span><span class="no">Bootstrap</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">285</span><span class="p">)</span>
+<span class="n">at</span> <span class="n">org</span><span class="p">.</span><span class="nf">elasticsearch</span><span class="p">.</span><span class="nf">bootstrap</span><span class="o">.</span><span class="no">Elasticsearch</span><span class="p">.</span><span class="nf">main</span><span class="p">(</span><span class="no">Elasticsearch</span><span class="p">.</span><span class="nf">java</span><span class="p">:</span><span class="mi">35</span><span class="p">)</span>
+<span class="no">Refer</span> <span class="n">to</span> <span class="n">the</span> <span class="n">log</span> <span class="k">for</span> <span class="n">complete</span> <span class="n">error</span> <span class="n">details</span></code></pre></figure>
+
+<p>There is a GitHub issue that explores the problem and solution which can be found <a href="https://github.com/boot2docker/boot2docker/issues/581">here</a>. The solution involves activating and mounting the shared folder in the virtual machine as NFS. The workaround documented in the issue above, involves doing the following:</p>
+
+<p>Get the docker-machine-nfs script from <a href="https://github.com/adlogix/docker-machine-nfs">here</a>
+Then run the command:
+$ docker-machine-nfs dev-nfs   <br />
+When done, open the file /etc/exports and replace -mapall=$uid:$gid with -maproot=0
+or just use</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">docker-machine-nfs default <span class="nt">--shared-folder</span><span class="o">=</span>/Users <span class="nt">--nfs-config</span><span class="o">=</span><span class="s2">"-alldirs -maproot=0”  [updated setting]</span></code></pre></figure>
+
+<p>Then restart nfsd</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span><span class="nb">sudo </span>nfsd restart</code></pre></figure>
+
+<p>And finally run</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span><span class="nb">eval</span> <span class="s2">"</span><span class="si">$(</span>docker-machine <span class="nb">env </span>dev-nfs<span class="si">)</span><span class="s2">"</span></code></pre></figure>
+
+<p>You should then be able to start you container with:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">docker run <span class="nt">-d</span> <span class="nt">-p</span> 9200:9200 <span class="nt">--name</span> k2_search <span class="nt">-v</span> <span class="s2">"</span><span class="nv">$PWD</span><span class="s2">/esdata"</span>:/usr/share/elasticsearch/data elasticsearch</code></pre></figure>
+
+<p>And verify with</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>docker ps</code></pre></figure>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+980a09759648 elasticsearch <span class="s2">"/docker-entrypoint.s"</span> About an hour ago Up About an hour 0.0.0.0:9200-&gt;9200/tcp, 9300/tcp k2_search</code></pre></figure>
+
+<p>Remember Mac OS X has a light weight Linux VM machine to run docker so the container is reachable only via the IP of the VM. You can find out the IP of the VM using:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="se">\$</span>docker-machine ip default</code></pre></figure>
+
+<p>(In this case my Virtual Machine is named default)</p>
+
+<p>Lets say the ip is 192.168.99.100 , you should be able to visit your browser at port 9200 and get the following output:</p>
+
+<figure class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="w">
+</span><span class="nl">"name"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"Longneck"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"cluster_name"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"elasticsearch"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="nl">"number"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"2.2.1"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"build_hash"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"d045fc29d1932bce18b2e65ab8b297fbf6cd41a1"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"build_timestamp"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"2016-03-09T09:38:54Z"</span><span class="p">,</span><span class="w">
+</span><span class="nl">"build_snapshot"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+</span><span class="nl">"lucene_version"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"5.4.1"</span><span class="w">
+</span><span class="p">},</span><span class="w">
+</span><span class="nl">"tagline"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"You Know, for Search"</span><span class="w">
+</span><span class="p">}</span></code></pre></figure>
+
+<p>Once Elasticsearch is setup, we can move to the Rails application.</p>
+
+<h2 id="rails-setup">Rails setup</h2>
+
+<h4 id="setup">Setup</h4>
+
+<p>There is a Ruby elastic search library that we will be using ‘elasticsearch’ which is a wrapper for two separate libraries (elasticsearch-transport and elasticsearch-api)</p>
+
+<ul>
+  <li><a href="https://github.com/elastic/elasticsearch-ruby">elasticsearch-ruby</a></li>
+  <li><a href="https://github.com/elastic/elasticsearch-rails">elasticsearch-rails</a></li>
+</ul>
+
+<p>The elasticshearch-model gem, builds on top of the elastic search library. The key is to extend any model that you want to search via elastic search with Elasticsearch functionality. To do this we make use of ActiveSupport::Concern instrumentation so as to pull out Elastcisearch code from our model code and make it ‘dryer’. For example let us say we have an Account model which we want to expose to Elasticsearch.</p>
+
+<p>In the models/concerns directory, create a file called account_indexer.rb and add the following:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">module</span> <span class="nn">AccountIndexer</span>
+<span class="kp">extend</span> <span class="no">ActiveSupport</span><span class="o">::</span><span class="no">Concern</span>
+
+<span class="n">included</span> <span class="k">do</span>
+<span class="kp">include</span> <span class="no">Elasticsearch</span><span class="o">::</span><span class="no">Model</span>
+
+    <span class="n">settings</span> <span class="ss">index: </span><span class="p">{</span> <span class="ss">number_of_shards: </span><span class="mi">1</span><span class="p">}</span> <span class="k">do</span>
+      <span class="n">mappings</span> <span class="ss">dynamic: </span><span class="s1">'false'</span> <span class="k">do</span>
+        <span class="n">indexes</span> <span class="ss">:number</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+        <span class="n">indexes</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+        <span class="n">indexes</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nf">as_indexed_json</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{})</span>
+      <span class="n">as_json</span><span class="p">(</span><span class="ss">root: </span><span class="kp">false</span><span class="p">,</span> <span class="ss">only: </span><span class="p">[</span><span class="ss">:number</span><span class="p">,</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">:last_name</span><span class="p">])</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">serach</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+      <span class="n">__elasticsearch__</span><span class="p">.</span><span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">end</span>
+
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Then in the Account model code you would have</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">Account</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Base</span>
+<span class="kp">include</span> <span class="no">AccountIndexer</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>The code</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">settings</span> <span class="ss">index: </span><span class="p">{</span> <span class="ss">number_of_shards: </span><span class="mi">1</span><span class="p">}</span> <span class="k">do</span>
+<span class="n">mappings</span> <span class="ss">dynamic: </span><span class="s1">'false'</span> <span class="k">do</span>
+<span class="n">indexes</span> <span class="ss">:number</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+<span class="n">indexes</span> <span class="ss">:first_name</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+<span class="n">indexes</span> <span class="ss">:last_name</span><span class="p">,</span> <span class="ss">analyzer: </span><span class="s1">'english'</span><span class="p">,</span> <span class="ss">index_options: </span><span class="s1">'offsets'</span>
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Is used to configure the index with mappings. In this case, we are interested in indexing 3 columns of the Account model - number, first_name, last_name. You can view the mappings hash with the command:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">Account</span><span class="p">.</span><span class="nf">mappings</span><span class="p">.</span><span class="nf">to_hash</span>
+<span class="p">{</span><span class="ss">:account</span><span class="o">=&gt;</span> <span class="p">{</span>
+<span class="ss">:dynamic</span><span class="o">=&gt;</span><span class="s2">"false"</span><span class="p">,</span>
+<span class="ss">:properties</span><span class="o">=&gt;</span> <span class="p">{</span>
+<span class="ss">:number</span><span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:analyzer</span><span class="o">=&gt;</span><span class="s2">"english"</span><span class="p">,</span> <span class="ss">:index_options</span><span class="o">=&gt;</span><span class="s2">"offsets"</span><span class="p">,</span> <span class="ss">:type</span><span class="o">=&gt;</span><span class="s2">"string"</span><span class="p">},</span>
+<span class="ss">:first_name</span><span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:analyzer</span><span class="o">=&gt;</span><span class="s2">"english"</span><span class="p">,</span> <span class="ss">:index_options</span><span class="o">=&gt;</span><span class="s2">"offsets"</span><span class="p">,</span> <span class="ss">:type</span><span class="o">=&gt;</span><span class="s2">"string"</span><span class="p">},</span>
+<span class="ss">:last_name</span><span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:analyzer</span><span class="o">=&gt;</span><span class="s2">"english"</span><span class="p">,</span> <span class="ss">:index_options</span><span class="o">=&gt;</span><span class="s2">"offsets"</span><span class="p">,</span> <span class="ss">:type</span><span class="o">=&gt;</span><span class="s2">"string"</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<h4 id="indexing">Indexing</h4>
+
+<p>The defined settings and mappings are used to create an index with the desired configuration
+Commands to create and refresh indexes are provided by the name spaced functions:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">Account</span><span class="p">.</span><span class="nf">*</span><span class="o">*</span><span class="n">elasticsearch</span><span class="o">**</span><span class="p">.</span><span class="nf">create_index!</span> <span class="ss">force: </span><span class="kp">true</span>
+<span class="no">Account</span><span class="p">.</span><span class="nf">*</span><span class="o">*</span><span class="n">elasticsearch</span><span class="o">**</span><span class="p">.</span><span class="nf">refresh_index!</span></code></pre></figure>
+
+<p>You can write rake tasks that perform these actions like so:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">desc</span> <span class="s1">'bulk index the account model'</span>
+<span class="n">task</span> <span class="ss">bulk_index_accounts: :environment</span> <span class="k">do</span>
+<span class="nb">puts</span> <span class="s1">'creating accounts index...'</span>
+<span class="no">Account</span><span class="p">.</span><span class="nf">*</span><span class="o">*</span><span class="n">elasticsearch</span><span class="o">**</span><span class="p">.</span><span class="nf">create_index!</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Before running the commands above, Elasticsearch needs to be bootstrapped in some kind of initialiser. Create an elastcisearch.yml file in your config directory with the following:</p>
+
+<p>##</p>
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="ss">development:
+host: </span><span class="s1">'http://localhost:9200'</span>
+<span class="ss">transport_options:
+request:
+timeout: </span><span class="mi">5</span>
+
+<span class="ss">test:
+host: </span><span class="s1">'http://localhost:9200'</span>
+<span class="ss">transport_options:
+request:
+timeout: </span><span class="mi">5</span>
+
+<span class="ss">production:
+host: </span><span class="s1">'http://localhost:9200'</span>
+<span class="ss">transport_options:
+request:
+timeout: </span><span class="mi">5</span></code></pre></figure>
+
+<p>Create an initializer elastcisearch.rb in config/initializers with the following:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<span class="ss">host: </span><span class="s1">'http://localhost:9200/'</span><span class="p">,</span>
+<span class="ss">transport_options: </span><span class="p">{</span>
+<span class="ss">request: </span><span class="p">{</span> <span class="ss">timeout: </span><span class="mi">5</span> <span class="p">}</span>
+<span class="p">},</span>
+<span class="p">}</span>
+
+<span class="k">if</span> <span class="no">File</span><span class="p">.</span><span class="nf">exists?</span><span class="p">(</span><span class="s1">'config/elasticsearch.yml'</span><span class="p">)</span>
+<span class="n">config</span><span class="p">.</span><span class="nf">merge!</span><span class="p">(</span><span class="no">YAML</span><span class="p">.</span><span class="nf">load_file</span><span class="p">(</span><span class="s2">"</span><span class="si">#{</span><span class="no">Rails</span><span class="p">.</span><span class="nf">root</span><span class="si">}</span><span class="s2">/config/elasticsearch.yml"</span><span class="p">)[</span><span class="no">Rails</span><span class="p">.</span><span class="nf">env</span><span class="p">].</span><span class="nf">deep_symbolize_keys</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="no">Elasticsearch</span><span class="o">::</span><span class="no">Model</span><span class="p">.</span><span class="nf">client</span> <span class="o">=</span> <span class="no">Elasticsearch</span><span class="o">::</span><span class="no">Client</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></code></pre></figure>
+
+<p>This will create an Elasticsearch client that will be used by ALL models in the application.<br />
+After creating the index, you could do the initial import of the data using the command.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">Account</span><span class="p">.</span><span class="nf">import</span></code></pre></figure>
+
+<p>However, recall that this call will be making remote api calls to the Elasticsearch server. At scale with thousands of records this is not optimal. Thankfully Elasticsearch provides a bulk indexing functionality to mitigate this. You could create a module to easily do bulk indexing of existing records like the one below:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">module</span> <span class="nn">Search</span>
+<span class="k">module</span> <span class="nn">BulkIndexer</span>
+<span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">import</span><span class="p">(</span><span class="n">klass</span><span class="p">)</span>
+<span class="n">klass</span><span class="p">.</span><span class="nf">constantize</span><span class="p">.</span><span class="nf">find_in_batches</span> <span class="k">do</span> <span class="o">|</span><span class="n">batch_objects</span><span class="o">|</span>
+<span class="n">bulk_index</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">batch_objects</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">prepare_records</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+      <span class="n">records</span><span class="p">.</span><span class="nf">map</span> <span class="k">do</span> <span class="o">|</span><span class="n">record</span><span class="o">|</span>
+        <span class="p">{</span><span class="ss">index: </span><span class="p">{</span><span class="ss">_id: </span><span class="n">record</span><span class="p">.</span><span class="nf">id</span><span class="p">,</span> <span class="ss">data: </span><span class="n">record</span><span class="p">.</span><span class="nf">as_indexed_json</span><span class="p">}}</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">bulk_index</span><span class="p">(</span><span class="n">klass</span><span class="p">,</span> <span class="n">records</span><span class="p">)</span>
+      <span class="n">klass</span><span class="p">.</span><span class="nf">constantize</span><span class="p">.</span><span class="nf">__elasticsearch__</span><span class="p">.</span><span class="nf">client</span><span class="p">.</span><span class="nf">bulk</span><span class="p">({</span>
+          <span class="ss">index: </span><span class="n">klass</span><span class="p">.</span><span class="nf">constantize</span><span class="p">.</span><span class="nf">__elasticsearch__</span><span class="p">.</span><span class="nf">index_name</span><span class="p">,</span>
+          <span class="ss">type: </span><span class="n">klass</span><span class="p">.</span><span class="nf">constantize</span><span class="p">.</span><span class="nf">__elasticsearch__</span><span class="p">.</span><span class="nf">document_type</span><span class="p">,</span>
+          <span class="ss">body: </span><span class="n">prepare_records</span><span class="p">(</span><span class="n">records</span><span class="p">)</span>
+      <span class="p">})</span>
+    <span class="k">end</span>
+
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>With this for example, a call to bulk index the Account model would be:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">Search</span><span class="o">::</span><span class="no">BulkIndexer</span><span class="p">.</span><span class="nf">import</span><span class="p">(</span><span class="s1">'Account'</span><span class="p">)</span></code></pre></figure>
+
+<h4 id="searching">Searching</h4>
+
+<p>A simple search now takes the form</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="no">Account</span><span class="p">.</span><span class="nf">search</span><span class="p">(</span><span class="s1">'query_string'</span><span class="p">)</span></code></pre></figure>
+
+<p>We are using just the basic search of elasticsearch as can be seen in the function</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">serach</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="o">**</span><span class="n">elasticsearch</span><span class="o">**</span><span class="p">.</span><span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>You can customize the search by sending in more options using the Elasticsearch DSL but we will stick with the plain vanilla search and you can look at the search DSL documentation. There are many options of retrieving the search results including the related records eg.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">records</span> <span class="o">=</span> <span class="no">Account</span><span class="p">.</span><span class="nf">search</span><span class="p">(</span><span class="s1">'query_string'</span><span class="p">).</span><span class="nf">records</span></code></pre></figure>
+
+<h4 id="updating-indices">Updating indices</h4>
+
+<p>As the application is used, invariably, the indices need to be updated when records are created/edited/deleted. The gem has callbacks that can be invoked automatically by including</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="kp">include</span> <span class="no">Elasticsearch</span><span class="o">::</span><span class="no">Model</span><span class="o">::</span><span class="no">Callbacks</span></code></pre></figure>
+
+<p>in the model (or in our case in the concern we are including). However, this will result in additional overhead when performing crud operations because the indexing operation involves doing an API call. It is prudent to pass this to a back ground job using Sidekiq or Resque. Since we use Resque, a background job worker to update indices could look something like this:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">module</span> <span class="nn">Search</span>
+<span class="k">class</span> <span class="nc">Indexer</span>
+<span class="vi">@queue</span> <span class="o">=</span> <span class="ss">:indexer</span>
+
+      <span class="k">def</span> <span class="nf">async_index_operation</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+        <span class="k">begin</span>
+          <span class="no">Resque</span><span class="p">.</span><span class="nf">enqueue</span><span class="p">(</span><span class="no">KopoKopo</span><span class="o">::</span><span class="no">Search</span><span class="o">::</span><span class="no">Indexer</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+        <span class="k">rescue</span> <span class="o">=&gt;</span> <span class="n">ex</span>
+          <span class="n">indexing_logger</span><span class="p">.</span><span class="nf">error</span>  <span class="s2">"E [</span><span class="si">#{</span><span class="no">Time</span><span class="p">.</span><span class="nf">now</span><span class="p">.</span><span class="nf">utc</span><span class="p">.</span><span class="nf">iso8601</span><span class="si">}</span><span class="s2">] Error: Error in Enqueueing </span><span class="si">#{</span><span class="n">klass</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="n">operation</span><span class="si">}</span><span class="s2"> operation: </span><span class="si">#{</span><span class="n">ex</span><span class="p">.</span><span class="nf">message</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+
+      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">perform</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+        <span class="k">begin</span>
+          <span class="vi">@es_client</span> <span class="o">=</span> <span class="no">Elasticsearch</span><span class="o">::</span><span class="no">Model</span><span class="p">.</span><span class="nf">client</span>
+          <span class="n">index_object</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span> <span class="k">if</span> <span class="vi">@es_client</span>
+        <span class="k">ensure</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+
+      <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">index_object</span><span class="p">(</span><span class="n">operation</span><span class="p">,</span> <span class="n">record_id</span><span class="p">,</span> <span class="n">klass</span><span class="p">)</span>
+
+        <span class="k">case</span> <span class="n">operation</span><span class="p">.</span><span class="nf">to_s</span>
+          <span class="k">when</span> <span class="sr">/index/</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="n">klass</span><span class="p">.</span><span class="nf">constantize</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="n">record_id</span><span class="p">)</span>
+            <span class="vi">@es_client</span><span class="p">.</span><span class="nf">index</span><span class="p">(</span><span class="ss">index: </span><span class="no">ActiveSupport</span><span class="o">::</span><span class="no">Inflector</span><span class="p">.</span><span class="nf">pluralize</span><span class="p">(</span><span class="n">klass</span><span class="p">.</span><span class="nf">downcase</span><span class="p">),</span>
+                             <span class="ss">type: </span><span class="n">klass</span><span class="p">.</span><span class="nf">downcase</span><span class="p">,</span>
+                             <span class="ss">id: </span><span class="n">record_id</span><span class="p">,</span>
+                             <span class="ss">body: </span><span class="n">record</span><span class="p">.</span><span class="nf">as_indexed_json</span><span class="p">)</span> <span class="k">if</span> <span class="n">record</span>
+          <span class="k">when</span> <span class="sr">/delete/</span>
+            <span class="vi">@es_client</span><span class="p">.</span><span class="nf">delete</span><span class="p">(</span><span class="ss">index: </span><span class="no">ActiveSupport</span><span class="o">::</span><span class="no">Inflector</span><span class="p">.</span><span class="nf">pluralize</span><span class="p">(</span><span class="n">klass</span><span class="p">.</span><span class="nf">downcase</span><span class="p">),</span>
+                              <span class="ss">type: </span><span class="n">klass</span><span class="p">.</span><span class="nf">downcase</span><span class="p">,</span>
+                              <span class="ss">id: </span><span class="n">record_id</span><span class="p">)</span>
+          <span class="k">else</span> <span class="k">raise</span> <span class="no">ArgumentError</span><span class="p">,</span> <span class="s2">"Unknown operation '</span><span class="si">#{</span><span class="n">operation</span><span class="si">}</span><span class="s2">'"</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+
+      <span class="k">def</span> <span class="nf">indexing_logger</span>
+        <span class="vi">@indexing_logger</span> <span class="o">=</span> <span class="no">Logger</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span> <span class="s2">"</span><span class="si">#{</span><span class="no">Rails</span><span class="p">.</span><span class="nf">root</span><span class="si">}</span><span class="s2">/log/indexer-job.log"</span><span class="p">,</span> <span class="s1">'monthly'</span><span class="p">)</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+<span class="k">end</span></code></pre></figure>
+
+<p>Add callbacks to the Account concern that will be invoked on saving an Account object or deleting an Account object</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">after_save</span> <span class="p">{</span><span class="no">Search</span><span class="o">::</span><span class="no">Indexer</span><span class="p">.</span><span class="nf">new</span><span class="p">.</span><span class="nf">async_index_operation</span><span class="p">(</span><span class="s1">'index'</span><span class="p">,</span> <span class="nb">self</span><span class="p">.</span><span class="nf">id</span><span class="p">,</span> <span class="nb">self</span><span class="p">.</span><span class="nf">class</span><span class="p">.</span><span class="nf">to_s</span><span class="p">)}</span>
+<span class="n">after_destroy</span> <span class="p">{</span><span class="no">Search</span><span class="o">::</span><span class="no">Indexer</span><span class="p">.</span><span class="nf">new</span><span class="p">.</span><span class="nf">async_index_operation</span><span class="p">(</span><span class="s1">'delete'</span><span class="p">,</span> <span class="nb">self</span><span class="p">.</span><span class="nf">id</span><span class="p">,</span> <span class="nb">self</span><span class="p">.</span><span class="nf">class</span><span class="p">.</span><span class="nf">to_s</span><span class="p">)}</span></code></pre></figure>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#docker" class="page__taxonomy-item" rel="tag">docker</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#elasticsearch" class="page__taxonomy-item" rel="tag">elasticsearch</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#rails" class="page__taxonomy-item" rel="tag">rails</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#rails" class="page__taxonomy-item" rel="tag">rails</a>
+    
+    </span>
+  </p>
+
+
+        
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2016-03-28T15:35:35+03:00">March 28, 2016</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Setting+up+elastic+search+in+Rails+using+Docker%20http%3A%2F%2Flocalhost%3A4000%2Frails%2FSetting-Up-Elasticsearch-In-Rails-Using-Docker%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Frails%2FSetting-Up-Elasticsearch-In-Rails-Using-Docker%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Frails%2FSetting-Up-Elasticsearch-In-Rails-Using-Docker%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/" class="pagination--pager" title="Creating a Testing PostgreSQL Server
+">Previous</a>
+    
+    
+      <a href="/rails/Troubleshooting-memory-leaks-in-Rails-5/" class="pagination--pager" title="Troubleshooting memory leaks in Rails 5
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/blog/welcome-to-jekyll/" rel="permalink">Welcome to Jekyll!
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different wa...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/Troubleshooting-memory-leaks-in-Rails-5/" rel="permalink">Troubleshooting memory leaks in Rails 5
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade
+coming from Rails 4.0 things went well I must ...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/" rel="permalink">Creating a Testing PostgreSQL Server
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">AWS RDS is really cool but… $$$
+
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/" rel="permalink">Partial Indexes with PostgreSQL and Rails
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db?
+When dealing with financial sys...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 Nyonura. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,700 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.21.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Partial Indexes with PostgreSQL and Rails - Nyonura</title>
+<meta name="description" content="So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db? When dealing with financial systems, this is more often the case (You never want to have a scenario that you end up double spending). Rails model validations more often takes care of this, but it is technically possible that something slips through and God forbid it i s that one million dollar transaction.">
+
+
+  <meta name="author" content="Dennis Ondeng">
+  
+  <meta property="article:author" content="Dennis Ondeng">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Nyonura">
+<meta property="og:title" content="Partial Indexes with PostgreSQL and Rails">
+<meta property="og:url" content="http://localhost:4000/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/">
+
+
+  <meta property="og:description" content="So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db? When dealing with financial systems, this is more often the case (You never want to have a scenario that you end up double spending). Rails model validations more often takes care of this, but it is technically possible that something slips through and God forbid it i s that one million dollar transaction.">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2014-07-17T15:35:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Nyonura Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Nyonura
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/images/bio-photo.jpg" alt="Dennis Ondeng" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Dennis Ondeng</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>Technology and other worldly musings of a father, husband and software engineer.</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="https://" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-link" aria-hidden="true"></i><span class="label">Website</span></a></li>
+          
+        
+          
+            <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i><span class="label">Twitter</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Partial Indexes with PostgreSQL and Rails">
+    <meta itemprop="description" content="So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db?When dealing with financial systems, this is more often the case (You never want to have a scenario that you end up double spending).Rails model validations more often takes care of this, but it is technically possible that something slips through and God forbid it is that one million dollar transaction.">
+    <meta itemprop="datePublished" content="2014-07-17T15:35:35+03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Partial Indexes with PostgreSQL and Rails
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <p>So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db?
+When dealing with financial systems, this is more often the case (You never want to have a scenario that you end up double spending).
+Rails model validations more often takes care of this, but it is technically possible that something slips through and God forbid it i
+s that one million dollar transaction.</p>
+
+<p>Having a validation such as:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">validates</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:presence</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">,</span> <span class="ss">:uniqueness</span> <span class="o">=&gt;</span> <span class="kp">true</span></code></pre></figure>
+
+<p>should do the trick. Upon trying to save a record with a duplicate name, the record would not save, and .save would return false.
+However, there are some exceptional conditions that can result in the application level validations being by passed. This could happen
+with race conditions such as multiple application servers hitting a database. Having suffered this situation and if you get as paranoid
+as I am, then you would probably also bring down the validation to the database level by making use of unique indexes.</p>
+
+<p>To spice things up, the records for which we want to avoid duplicates have uniqueness being defined by multiple columns hence the necessity
+of a compound index. As an example, say you have a model called Payment with the following attributes: id, amount, order_id, payment_date,
+description, status. order_id is a foreign key pointing to an Order item. Since it is possible to make multiple payments per order, there
+is a one to many relationships between orders and payments. All payments transition from a status of ‘Scheduled’ to ‘Paid’ after they are confirmed.
+The migration file for payments would look like this:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">CreatePayments</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+<span class="k">def</span> <span class="nf">change</span>
+<span class="n">create_table</span> <span class="ss">:payments</span> <span class="k">do</span> <span class="o">|</span><span class="n">t</span><span class="o">|</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">float</span> <span class="ss">:amount</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">integer</span> <span class="ss">:order_id</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">date</span> <span class="ss">:payment_date</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">string</span> <span class="ss">:description</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">string</span> <span class="ss">:status</span>
+<span class="n">t</span><span class="p">.</span><span class="nf">timestamps</span>
+<span class="k">end</span>
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>In our world that is filled with paranoia we would want to add a unique index to ensure that duplicates are avoided at the db level.
+To do this we would create a compound index.</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">CreateUniqueIndexForPayments</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+<span class="k">def</span> <span class="nf">change</span>
+<span class="n">add_index</span> <span class="ss">:payments</span><span class="p">,</span> <span class="p">[</span><span class="ss">:order_id</span><span class="p">,</span> <span class="ss">:amount</span><span class="p">,</span> <span class="ss">:payment_date</span><span class="p">,</span> <span class="ss">:status</span><span class="p">]</span> <span class="ss">name: </span><span class="s1">'unique_index_to_avoid_duplicate_payments'</span><span class="p">,</span> <span class="ss">unique: </span><span class="kp">true</span>
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Let’s analyze what this index will prevent. You would not be able to create a payment of the same amount being applied to the same order
+on the same day. Unless of course the first payment’s status flips from ‘Scheduled’ to ‘Paid’ before the second payment is made.
+Yes this is a simplistic example and it prevents the possibility that two legitimate consecutive payments of the same amount to can
+be made against the same order within a short period of time. Though theoretically possible, that scenario would be practically very rare,
+and in many cases might be an inconvenience worth dealing with if the upside is completely guaranteeing that a double payment does not
+get registered in error.</p>
+
+<p>How can this index be improved further? Enter ‘Partial Indexes’. The payments table will be undoubtedly be a very huge table. However,
+the uniqueness we are concerned about above, only applies to ‘Scheduled’ payments. The payments table is bount to have hundreds or
+thousands of ‘Paid’ status payments whereas the payments with a ‘Scheduled’ status will always be a very small subset of the payments table.
+Using a partial index that takes into account only the status ‘Scheduled’ would significantly increase performance and efficiency by
+reducing the index’s size thus taking up less storage. The index is also easier to maintain and faster to scan. To know about partial
+indexes you can read the original white paper by Michael Stonebraker located <a href="http://db.cs.berkeley.edu/papers/ERL-M89-17.pdf">here</a>.
+Modifying the migration to cater for a partial index on the status field yield</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">class</span> <span class="nc">CreateUniqueIndexForPayments</span> <span class="o">&lt;</span> <span class="no">ActiveRecord</span><span class="o">::</span><span class="no">Migration</span>
+<span class="k">def</span> <span class="nf">change</span>
+<span class="n">add_index</span> <span class="ss">:payments</span><span class="p">,</span> <span class="p">[</span><span class="ss">:order_id</span><span class="p">,</span> <span class="ss">:amount</span><span class="p">,</span> <span class="ss">:payment_date</span><span class="p">,</span> <span class="ss">:status</span><span class="p">]</span> <span class="ss">name: </span><span class="s1">'unique_index_to_avoid_duplicate_payments'</span><span class="p">,</span> <span class="ss">where: </span><span class="s2">"status = 'Scheduled'"</span><span class="p">,</span> <span class="ss">unique: </span><span class="kp">true</span>
+<span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+<p>Here is a catch though; I was trying this in rails 3.2 and it happens that partial index migrations are not supported. In Rails 4.x there
+is in built suppot for the above migration. To get around this for rails 3.2, we used the gem pg_power which is billed as an ActiveRecord extension
+to get more out of PostgreSQL.
+In psql, our table would look like this:-</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">dennis</span><span class="o">-</span><span class="n">home</span><span class="o">-</span><span class="c1"># \d payments</span>
+<span class="no">Table</span> <span class="s2">"public.payments"</span>
+<span class="no">Column</span> <span class="o">|</span> <span class="no">Type</span> <span class="o">|</span> <span class="no">Modifiers</span>
+<span class="o">--------------+-----------------------------+-----------------------------------------------------</span>
+<span class="nb">id</span> <span class="o">|</span> <span class="n">integer</span> <span class="o">|</span> <span class="n">not</span> <span class="n">null</span> <span class="n">default</span> <span class="n">nextval</span><span class="p">(</span><span class="s1">'payments_id_seq'</span><span class="o">::</span><span class="n">regclass</span><span class="p">)</span>
+<span class="n">amount</span> <span class="o">|</span> <span class="n">double</span> <span class="n">precision</span> <span class="o">|</span>
+<span class="n">order_id</span> <span class="o">|</span> <span class="n">integer</span> <span class="o">|</span>
+<span class="n">payment_date</span> <span class="o">|</span> <span class="n">date</span> <span class="o">|</span>
+<span class="n">description</span> <span class="o">|</span> <span class="n">character</span> <span class="n">varying</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="o">|</span>
+<span class="n">status</span> <span class="o">|</span> <span class="n">character</span> <span class="n">varying</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="o">|</span>
+<span class="n">created_at</span> <span class="o">|</span> <span class="n">timestamp</span> <span class="n">without</span> <span class="n">time</span> <span class="n">zone</span> <span class="o">|</span>
+<span class="n">updated_at</span> <span class="o">|</span> <span class="n">timestamp</span> <span class="n">without</span> <span class="n">time</span> <span class="n">zone</span> <span class="o">|</span>
+<span class="no">Indexes</span><span class="p">:</span>
+<span class="s2">"payments_pkey"</span> <span class="no">PRIMARY</span> <span class="no">KEY</span><span class="p">,</span> <span class="n">btree</span> <span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+<span class="s2">"unique_index_to_avoid_duplicate_payments"</span> <span class="n">btree</span> <span class="p">(</span><span class="n">order_id</span><span class="p">,</span> <span class="n">amount</span><span class="p">,</span> <span class="n">payment_date</span><span class="p">,</span> <span class="n">status</span><span class="p">)</span> <span class="no">WHERE</span> <span class="n">status</span><span class="o">::</span><span class="n">text</span> <span class="o">=</span> <span class="s1">'Scheduled'</span><span class="o">::</span><span class="n">text</span></code></pre></figure>
+
+<p>With this we now are able to avoid in-inadvertent duplicate payments which might otherwise be catastrophic.</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#postgresql" class="page__taxonomy-item" rel="tag">postgresql</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/categories/#rails" class="page__taxonomy-item" rel="tag">rails</a>
+    
+    </span>
+  </p>
+
+
+        
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2014-07-17T15:35:35+03:00">July 17, 2014</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Partial+Indexes+with+PostgreSQL+and+Rails%20http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FPartial-Indexes-with-PostgreSQL-and-Rails%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FPartial-Indexes-with-PostgreSQL-and-Rails%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FPartial-Indexes-with-PostgreSQL-and-Rails%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/ubuntu/macbook/Uninstalling-ubuntu-from-a-Mac-Book-Pro/" class="pagination--pager" title="Uninstalling Ubuntu from a Mac Book Pro
+">Previous</a>
+    
+    
+      <a href="/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/" class="pagination--pager" title="Creating a Testing PostgreSQL Server
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/blog/welcome-to-jekyll/" rel="permalink">Welcome to Jekyll!
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different wa...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/Troubleshooting-memory-leaks-in-Rails-5/" rel="permalink">Troubleshooting memory leaks in Rails 5
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade
+coming from Rails 4.0 things went well I must ...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/" rel="permalink">Setting up elastic search in Rails using Docker
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not
+optimal (and maybe we did not set i...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/" rel="permalink">Creating a Testing PostgreSQL Server
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">AWS RDS is really cool but… $$$
+
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 Nyonura. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

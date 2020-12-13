@@ -1,0 +1,788 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.21.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Creating a Testing PostgreSQL Server - Nyonura</title>
+<meta name="description" content="AWS RDS is really cool but… $$$">
+
+
+  <meta name="author" content="Dennis Ondeng">
+  
+  <meta property="article:author" content="Dennis Ondeng">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Nyonura">
+<meta property="og:title" content="Creating a Testing PostgreSQL Server">
+<meta property="og:url" content="http://localhost:4000/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/">
+
+
+  <meta property="og:description" content="AWS RDS is really cool but… $$$">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2015-09-26T15:35:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": null,
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Nyonura Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Nyonura
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <svg class="icon" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15.99 16">
+            <path d="M15.5,13.12L13.19,10.8a1.69,1.69,0,0,0-1.28-.55l-0.06-.06A6.5,6.5,0,0,0,5.77,0,6.5,6.5,0,0,0,2.46,11.59a6.47,6.47,0,0,0,7.74.26l0.05,0.05a1.65,1.65,0,0,0,.5,1.24l2.38,2.38A1.68,1.68,0,0,0,15.5,13.12ZM6.4,2A4.41,4.41,0,1,1,2,6.4,4.43,4.43,0,0,1,6.4,2Z" transform="translate(-.01)"></path>
+          </svg>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+
+
+<div itemscope itemtype="https://schema.org/Person">
+
+  
+    <div class="author__avatar">
+      
+        <img src="/assets/images/bio-photo.jpg" alt="Dennis Ondeng" itemprop="image">
+      
+    </div>
+  
+
+  <div class="author__content">
+    
+      <h3 class="author__name" itemprop="name">Dennis Ondeng</h3>
+    
+    
+      <div class="author__bio" itemprop="description">
+        <p>Technology and other worldly musings of a father, husband and software engineer.</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+
+      
+        
+          
+            <li><a href="https://" rel="nofollow noopener noreferrer"><i class="fas fa-fw fa-link" aria-hidden="true"></i><span class="label">Website</span></a></li>
+          
+        
+          
+            <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i><span class="label">Twitter</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Creating a Testing PostgreSQL Server">
+    <meta itemprop="description" content="AWS RDS is really cool but… $$$">
+    <meta itemprop="datePublished" content="2015-09-26T15:35:35+03:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Creating a Testing PostgreSQL Server
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+        <h2 id="aws-rds-is-really-cool-but-">AWS RDS is really cool but… $$$</h2>
+
+<p>We are huge fans of AWS at <a href="http://www.kopokopo.com">Kopo Kopo</a>. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages listed below.
+However, when it comes to testing and staging environments, is RDS overkill ? I have come to think so.</p>
+
+<p>RDS offers numerous advantages that include but not limited to:</p>
+
+<ul>
+  <li>Automated backups and point in time recovery ability</li>
+  <li>Multi-AZ availability (redundancy)</li>
+  <li>Seamless on-demand scaling</li>
+  <li>Managed upgrades</li>
+  <li>Read-only replica management for increased read workloads</li>
+</ul>
+
+<p>We isolate each client’s setup in its own Virtual Private Cloud (VPC) on AWS. When creating staging environements for testing, our first pass involved trying to exactly re-create what the production environment looked like so as to test on a setup that was as close to production as possible. This meant having staging environments that were also running RDS databases. The only feature we subtracted from the production setup was the Multi-AZ availability since - well if an AWS AZ went down it would be non catastrophic since it was just a staging environment and we could get the whole setup back up and running in a matter of minutes or hours.</p>
+
+<p>The problem with the above setup is cost. As you get many clients and get multiple staging environments, AWS resources cost go up since the “hands off” database management that RDS affords actually comes at a cost. Well, why should staging environments be accorded RDS resources especially after we learned how our apps behaved? Not to mention the fact, that for a Rails application, there is nothing really magical about where the db is. A rails application merely points to a db in database.yml and this could be a local or remote db. Why not just create a ‘Database Server’ to serve PostgreSQL databases for all the staging and testing environments ?</p>
+
+<hr />
+
+<h2 id="creating-a-postgresql-database-server">Creating a PostgreSQL database server</h2>
+
+<p>Start with a base Ubuntu image and create an EC2 instance. You could bring up your instance in EC2 Classic or like in our case, in a public subnet of a VPC of your chosing. Use a new AWS Security Group and allow inbound SSH traffic for now. We will modify this later to firewall the Database Server.</p>
+
+<p>Install PostgreSQL by running the following commands</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo apt-get update
+sudo apt-get install -y postgresql postgresql-contrib
+</code></pre></div></div>
+
+<p>You then need to create a user that you will be using to access the database(s).</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo -u postgres createuser -P [Your user name]
+</code></pre></div></div>
+
+<p>The command above requires you to enter a password for the user in question. You can then proceed to create a single or multiple databases for applications that this database server will serve. You of course need to consider the resources this particular instance has. Staging and testing servers most likely (like in our case) will not be carrying production loads but the number of databases you create needs to put in consideration the resources available on the machine. To create the databases;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo -u postgres createdb -O [Your user name] [Database 1 name]
+sudo -u postgres createdb -O [Your user name] [Database 2 name]
+</code></pre></div></div>
+
+<p>Upon successful creation of the databases, you can test connection to said databases with the following command;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psql -h localhost -U [Your user name] [Database 1 name]
+</code></pre></div></div>
+
+<p>After being prompted for the password for [Your user name] you will then be at the postgres prompt.</p>
+
+<p>If you have your database server on EC2, you will undoubtedly not want to expose the databse connection to the Internet for obvious security reasons. You could therefore avail connection to your database server via an SSH tunnel. To set up an SSH tunnel to your database server instance run the command;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh -L 127.0.0.1:5433:127.0.0.1:5432 -i [path to pem file] [ssh user name]@[database server IP address] -N
+</code></pre></div></div>
+
+<p>We are not fans of passwords, so we use ssh keys to connect to the database server. The [path to pem file] is the path to the AWS key pair that you would use to connect to the EC2 instance (or the path to a private key whose public key is authorized to SSH into the database server). After running the above command, your local host’s prot 5433 is mapped to the remote servers port 5432 (the port postgres server is running on). To test the tunnel, on another terminal on your local machine, connect to the db using;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psql -h localhost -U [Your user name] -p 5433 [Database 1 name]
+</code></pre></div></div>
+
+<p>The connection to the remote database should succeed using SSH tunneling.</p>
+
+<hr />
+
+<h2 id="setting-up-application-deployment">Setting up application deployment</h2>
+
+<p>So you now have a database server but use AWS Opsworks to deploy and manage your cloud infrastracture (did I mention we are AWS fans?). How do you set up your application deployment so that you can securely connect to the database server from your rails application instances? You can use two approaches</p>
+
+<h3 id="1-using-a-combination-of-firewalling-and-postgres-access-configuration">1. Using a combination of ‘firewalling’ and postgres access configuration</h3>
+
+<p>Locate the pg_hba.conf file for your postgres installation for example mine is located at:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/etc/postgresql/9.3/main/pg_hba.conf
+</code></pre></div></div>
+
+<p>We would like to be able to connect to postgres from any location. Somewhere in the connection section, you need to add the following line</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>host    all     all     0.0.0.0/0       md5
+</code></pre></div></div>
+
+<p>This tells postgres to accept connections from for all users, for all databases from any location. Yes this looks alarming, but don’t worry as we will see below, we will firewall the instance to restrict connections. If you are still paranoid, you could still go ahead and add the specific IP’s that your web application will be connecting from like so:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>host    all     all     X.X.X.X/32       md5
+</code></pre></div></div>
+
+<p>The problem of taking the above approach, is you can only use it if the IP’s of your web applications will be fairly static. If your case is like ours where your web application IP’s are somehow dynamic (due to frequently bringing up and down web application servers) then restricting IP’s at the postgres level will be cumbersome.</p>
+
+<p>We next need to enable remote connections to the database which is not enabled by default. This is done in the file postgresql.conf located in for example;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/etc/postgresql/9.3/main/postgresql.conf
+</code></pre></div></div>
+
+<p>Locate the line (around line 59)</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#listen_addresses = 'localhost'          # what IP address(es) to listen on;
+</code></pre></div></div>
+
+<p>uncomment and change it to;</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>listen_addresses = '*'          # what IP address(es) to listen on;
+</code></pre></div></div>
+
+<p>save and be sure to restart postgres:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo service postgresql start
+</code></pre></div></div>
+
+<p>Next we need to firewall the Database Server. Locate the Security Group you created for the Database Server instance. Let us assume that all webservers are located in a public subnet of a VPC. Whenever we bring up a web application server, we assign it a special AWS Security Group called webserver-sg and in this case we will assume that the group id assigned by AWS is sg-442b9033. Our goal is to ensure that only machines located in our public subnet and using the SG webserver-sg are able to connect to the Database Server. To achieve this, modify the Database Server Security Group to look like this;</p>
+
+<p><img src="http://localhost:4000/img/posts/db-server-sg-image.png" alt="Databse Server Security Group" /></p>
+
+<p>You can now test the connectivity to your database from your web application machine. SSH to the web application server and run:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>psql -h [DB Server IP address] -U [Your user name] [Database 1 name]
+</code></pre></div></div>
+
+<p>You should successfully be connected to [Database 1 name]</p>
+
+<h4 id="setting-up-deployment-with-opsworks">Setting up deployment with OpsWorks</h4>
+
+<p>We now need to modify our OpsWorks setup to get rid of the RDS functionality. In the staging OpsWorks stack, set the application data source to ‘none’.</p>
+
+<p><img src="http://localhost:4000/img/posts/ops-works-no-data-source.png" alt="Set data source to none" /></p>
+
+<p>When deploying using AWS OpsWorks and RDS like our prevous staging setup was, OpsWorks automatically creates a database.yml file using the information from the app’s <a href="http://docs.aws.amazon.com/opsworks/latest/userguide/workingcookbook-json.html#workingcookbook-json-deploy">deploy attributes</a></p>
+
+<p>Since our app now does not have an attached database, we have to do it using a custom JSON to add database attributes to the app’s deploy attributes that will contain the connection information.The attributes are all under[“deploy”][“appshortname”][“database”], where appshortname is the app’s short name, which AWS OpsWorks generates from the app name. Below is a sample custom JSON for our staging-app</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code> {
+  "deploy" : {
+    "staging_app" : {
+      "database" : {
+        "adapter" : "postgresql",
+        "database" : "database-1-name",
+        "host" : "X.X.X.X",
+        "password" : "password",
+        "port" : 9999
+        "reconnect" : true,
+        "username" : "username"
+      }
+    }
+  }
+}
+</code></pre></div></div>
+
+<p>Replace the IP X.X.X.X with the IP address of the Database Server and the ‘portnumber’ with the port number you used above to run postgres. With this, upon deployment, the database.yml file will be created with the above settings and
+your application should be able to connect to the said database. You now have a database server that you can have applications from different OpsWorks stacks
+connecting to.</p>
+
+<h3 id="2-using-ssh-tunneling">2. Using SSH Tunneling</h3>
+
+<p>Coming Soon in part II…</p>
+
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#postgresql" class="page__taxonomy-item" rel="tag">postgresql</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#rails" class="page__taxonomy-item" rel="tag">rails</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#postgresql" class="page__taxonomy-item" rel="tag">postgresql</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/categories/#rails" class="page__taxonomy-item" rel="tag">rails</a>
+    
+    </span>
+  </p>
+
+
+        
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2015-09-26T15:35:35+03:00">September 26, 2015</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+
+  <a href="https://twitter.com/intent/tweet?text=Creating+a+Testing+PostgreSQL+Server%20http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FCreating-a-Testing-PostgreSQL-Server%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FCreating-a-Testing-PostgreSQL-Server%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Frails%2Fpostgresql%2FCreating-a-Testing-PostgreSQL-Server%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/" class="pagination--pager" title="Partial Indexes with PostgreSQL and Rails
+">Previous</a>
+    
+    
+      <a href="/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/" class="pagination--pager" title="Setting up elastic search in Rails using Docker
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/blog/welcome-to-jekyll/" rel="permalink">Welcome to Jekyll!
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different wa...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/Troubleshooting-memory-leaks-in-Rails-5/" rel="permalink">Troubleshooting memory leaks in Rails 5
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade
+coming from Rails 4.0 things went well I must ...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/" rel="permalink">Setting up elastic search in Rails using Docker
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not
+optimal (and maybe we did not set i...</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/" rel="permalink">Partial Indexes with PostgreSQL and Rails
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db?
+When dealing with financial sys...</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://twitter.com/donden1" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-twitter-square" aria-hidden="true"></i> Twitter</a></li>
+        
+      
+        
+          <li><a href="https://github.com/dondeng" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2020 Nyonura. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>

@@ -35,6 +35,42 @@ var store = [{
         "url": "http://localhost:4000/blog/post-link/",
         "teaser": null
       },{
+        "title": "Single table inheritance and updating in Rails 3",
+        "excerpt":"For my first blog post, I may as well start by talking about a recent oddity that I encountered working on our rails application (at Kopo Kopo, Inc). It probably may not be an oddity for some rails aficionados but well, it was a head scratcher so I decided to...","categories": ["rails"],
+        "tags": [],
+        "url": "http://localhost:4000/rails/Single-Table-Inheritance-and-updating-in-Rails-3/",
+        "teaser": null
+      },{
+        "title": "Uninstalling Ubuntu from a Mac Book Pro",
+        "excerpt":"I am not an apple fan-boy, but I admit that I like apple hardware – specifically the Mac Book Pro. For this reason, I usually run Ubuntu on my Mac Book Pro. If it was not for iTunes, I probably would not even dual-boot. I can never get over the...","categories": ["ubuntu","macbook"],
+        "tags": [],
+        "url": "http://localhost:4000/ubuntu/macbook/Uninstalling-ubuntu-from-a-Mac-Book-Pro/",
+        "teaser": null
+      },{
+        "title": "Partial Indexes with PostgreSQL and Rails",
+        "excerpt":"So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db? When dealing with financial systems, this is more often the case (You never want to have a scenario that you end up double spending). Rails model validations...","categories": ["rails","postgresql"],
+        "tags": [],
+        "url": "http://localhost:4000/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/",
+        "teaser": null
+      },{
+        "title": "Creating a Testing PostgreSQL Server",
+        "excerpt":"AWS RDS is really cool but… $$$ We are huge fans of AWS at Kopo Kopo. We therefore use RDS to run our databases that ship with our Rails application(s). RDS offers us a couple of advantages listed below. However, when it comes to testing and staging environments, is RDS...","categories": ["rails","postgresql"],
+        "tags": ["rails","postgresql"],
+        "url": "http://localhost:4000/rails/postgresql/Creating-a-Testing-PostgreSQL-Server/",
+        "teaser": null
+      },{
+        "title": "Setting up elastic search in Rails using Docker",
+        "excerpt":"I recently worked at moving our application search solution from using sphinx to elastic search. Our Sphinx setup was not optimal (and maybe we did not set it up correctly). In production with sphinx, we had to maintain a separate dummy app on our sphinx server just to run maintenance...","categories": ["rails"],
+        "tags": ["docker","elasticsearch","rails"],
+        "url": "http://localhost:4000/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/",
+        "teaser": null
+      },{
+        "title": "Troubleshooting memory leaks in Rails 5",
+        "excerpt":"So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade coming from Rails 4.0 things went well I must say. The only two issues we experienced were An issue with our master-slave RDS replication where by controllers that...","categories": ["rails"],
+        "tags": ["rails","memory"],
+        "url": "http://localhost:4000/rails/Troubleshooting-memory-leaks-in-Rails-5/",
+        "teaser": null
+      },{
         "title": "Welcome to Jekyll!",
         "excerpt":"You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when...","categories": ["blog"],
         "tags": ["Jekyll","update"],

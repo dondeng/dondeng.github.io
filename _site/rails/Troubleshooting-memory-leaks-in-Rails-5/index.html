@@ -9,8 +9,8 @@
   <head>
     <meta charset="utf-8">
 
-<!-- begin _includes/seo.html --><title>Post: Chat - Nyonura</title>
-<meta name="description" content="Abbott: Strange as it may seem, they give ball players nowadays very peculiar names.">
+<!-- begin _includes/seo.html --><title>Troubleshooting memory leaks in Rails 5 - Nyonura</title>
+<meta name="description" content="So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade coming from Rails 4.0 things went well I must say. The only two issues we experienced were">
 
 
   <meta name="author" content="Dennis Ondeng">
@@ -22,26 +22,26 @@
 <meta property="og:type" content="article">
 <meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="Nyonura">
-<meta property="og:title" content="Post: Chat">
-<meta property="og:url" content="http://localhost:4000/blog/post-chat/">
+<meta property="og:title" content="Troubleshooting memory leaks in Rails 5">
+<meta property="og:url" content="http://localhost:4000/rails/Troubleshooting-memory-leaks-in-Rails-5/">
 
 
-  <meta property="og:description" content="Abbott: Strange as it may seem, they give ball players nowadays very peculiar names.">
-
-
-
-
-
-
-
-  <meta property="article:published_time" content="2010-01-08T00:00:00+03:00">
+  <meta property="og:description" content="So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade coming from Rails 4.0 things went well I must say. The only two issues we experienced were">
 
 
 
 
 
 
-<link rel="canonical" href="http://localhost:4000/blog/post-chat/">
+
+  <meta property="article:published_time" content="2018-02-20T15:35:35+03:00">
+
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/rails/Troubleshooting-memory-leaks-in-Rails-5/">
 
 
 
@@ -275,15 +275,15 @@
 
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
-    <meta itemprop="headline" content="Post: Chat">
-    <meta itemprop="description" content="Abbott: Strange as it may seem, they give ball players nowadays very peculiar names.">
-    <meta itemprop="datePublished" content="2010-01-08T00:00:00+03:00">
+    <meta itemprop="headline" content="Troubleshooting memory leaks in Rails 5">
+    <meta itemprop="description" content="So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgradecoming from Rails 4.0 things went well I must say. The only two issues we experienced were">
+    <meta itemprop="datePublished" content="2018-02-20T15:35:35+03:00">
     
 
     <div class="page__inner-wrap">
       
         <header>
-          <h1 id="page-title" class="page__title" itemprop="headline">Post: Chat
+          <h1 id="page-title" class="page__title" itemprop="headline">Troubleshooting memory leaks in Rails 5
 </h1>
           
 
@@ -299,7 +299,7 @@
       <span class="page__meta-readtime">
         <i class="far fa-clock" aria-hidden="true"></i>
         
-          2 minute read
+          1 minute read
         
       </span>
     
@@ -311,131 +311,34 @@
 
       <section class="page__content" itemprop="text">
         
-        <p>Abbott: Strange as it may seem, they give ball players nowadays very peculiar names.</p>
+        <p>So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade
+coming from Rails 4.0 things went well I must say. The only two issues we experienced were</p>
 
-<p>Costello: Funny names?</p>
+<ul>
+  <li>An issue with our master-slave RDS replication where by controllers that are heavily ‘read-centric’ and whose
+db requests are sent to a read replica, all over sudden would have caching problems and present stale data on
+subsequent access to the same page/view. (This will be for another blog post)</li>
+  <li>We seemed to be having memory issues after a while. We are on an Nginx-Passenger web server stack and during peak hours
+there always seemed to be situations where our server would get maxed out of its memory by the passenger processes. We summized
+that something was leaking memory and the culprit needed to be found.</li>
+</ul>
 
-<p>Abbott: Nicknames, nicknames. Now, on the St. Louis team we have Who’s on first, What’s on second, I Don’t Know is on third–</p>
+<p>This post covers problem number 2.</p>
 
-<p>Costello: That’s what I want to find out. I want you to tell me the names of the fellows on the St. Louis team.</p>
+<p>We figured that the first order of business would be to get relief from having to periodically scramble and restart our
+app manually. To do this, we figured that we needed to take advantage of the <a href="https://www.phusionpassenger.com/library/config/apache/reference/#passengermaxrequests">PassengerMaxRequest</a> configuration in
+Phusion Passenger. This parameter (which has a default value of 0) determines the maximum number of requests an application process
+will process. After reaching this threshold, the process is restarted. Any memory that may have been tied up,
+is then released back to the OS. If you have a run-away process with a memory leak, this restart at the very least
+ensures that memory is released back to the OS and the process is restarted without users being impacted.</p>
 
-<p>Abbott: I’m telling you. Who’s on first, What’s on second, I Don’t Know is on third–</p>
+<p>It is important to note, as the documentation notes, the better parameter to use for this optimization would be the <a href="https://www.phusionpassenger.com/library/config/apache/reference/#passengermemorylimit">PassengerMemoryLimit</a>.
+Also set to 0 by default, when specified this requires passenger to restart the application process when a certain memory threshold is reached.
+Note that this parameter is only available in Passenger Enterprise and not the open source version.</p>
 
-<p>Costello: You know the fellows’ names?</p>
+<p>Immediately we did this we noticed a big difference. The total private dirty RSS taken up by passenger processes was now peaking at around 3.5GB.
+This is after a period where it would spike to consume all of 16GB a server.</p>
 
-<p>Abbott: Yes.</p>
-
-<p>Costello: Well, then who’s playing first?</p>
-
-<p>Abbott: Yes.</p>
-
-<p>Costello: I mean the fellow’s name on first base.</p>
-
-<p>Abbott: Who.</p>
-
-<p>Costello: The fellow playin’ first base.</p>
-
-<p>Abbott: Who.</p>
-
-<p>Costello: The guy on first base.</p>
-
-<p>Abbott: Who is on first.</p>
-
-<p>Costello: Well, what are you askin’ me for?</p>
-
-<p>Abbott: I’m not asking you–I’m telling you. Who is on first.</p>
-
-<p>Costello: I’m asking you–who’s on first?</p>
-
-<p>Abbott: That’s the man’s name.</p>
-
-<p>Costello: That’s who’s name?</p>
-
-<p>Abbott: Yes.</p>
-
-<p>Costello: When you pay off the first baseman every month, who gets the money?</p>
-
-<p>Abbott: Every dollar of it. And why not, the man’s entitled to it.</p>
-
-<p>Costello: Who is?</p>
-
-<p>Abbott: Yes.</p>
-
-<p>Costello: So who gets it?</p>
-
-<p>Abbott: Why shouldn’t he? Sometimes his wife comes down and collects it.</p>
-
-<p>Costello: Who’s wife?</p>
-
-<p>Abbott: Yes. After all, the man earns it.</p>
-
-<p>Costello: Who does?</p>
-
-<p>Abbott: Absolutely.</p>
-
-<p>Costello: Well, all I’m trying to find out is what’s the guy’s name on first base?</p>
-
-<p>Abbott: Oh, no, no. What is on second base.</p>
-
-<p>Costello: I’m not asking you who’s on second.</p>
-
-<p>Abbott: Who’s on first!</p>
-
-<p>Costello: St. Louis has a good outfield?</p>
-
-<p>Abbott: Oh, absolutely.</p>
-
-<p>Costello: The left fielder’s name?</p>
-
-<p>Abbott: Why.</p>
-
-<p>Costello: I don’t know, I just thought I’d ask.</p>
-
-<p>Abbott: Well, I just thought I’d tell you.</p>
-
-<p>Costello: Then tell me who’s playing left field?</p>
-
-<p>Abbott: Who’s playing first.</p>
-
-<p>Costello: Stay out of the infield! The left fielder’s name?</p>
-
-<p>Abbott: Why.</p>
-
-<p>Costello: Because.</p>
-
-<p>Abbott: Oh, he’s center field.</p>
-
-<p>Costello: Wait a minute. You got a pitcher on this team?</p>
-
-<p>Abbott: Wouldn’t this be a fine team without a pitcher?</p>
-
-<p>Costello: Tell me the pitcher’s name.</p>
-
-<p>Abbott: Tomorrow.</p>
-
-<p>Costello: Now, when the guy at bat bunts the ball–me being a good catcher–I want to throw the guy out at first base, so I pick up the ball and throw it to who?</p>
-
-<p>Abbott: Now, that’s he first thing you’ve said right.</p>
-
-<p>Costello: I DON’T EVEN KNOW WHAT I’M TALKING ABOUT!</p>
-
-<p>Abbott: Don’t get excited. Take it easy.</p>
-
-<p>Costello: I throw the ball to first base, whoever it is grabs the ball, so the guy runs to second. Who picks up the ball and throws it to what. What throws it to I don’t know. I don’t know throws it back to tomorrow–a triple play.</p>
-
-<p>Abbott: Yeah, it could be.</p>
-
-<p>Costello: Another guy gets up and it’s a long ball to center.</p>
-
-<p>Abbott: Because.</p>
-
-<p>Costello: Why? I don’t know. And I don’t care.</p>
-
-<p>Abbott: What was that?</p>
-
-<p>Costello: I said, I DON’T CARE!</p>
-
-<p>Abbott: Oh, that’s our shortstop!</p>
 
         
       </section>
@@ -456,11 +359,11 @@
     
       
       
-      <a href="/tags/#chat" class="page__taxonomy-item" rel="tag">chat</a><span class="sep">, </span>
+      <a href="/tags/#memory" class="page__taxonomy-item" rel="tag">memory</a><span class="sep">, </span>
     
       
       
-      <a href="/tags/#post-formats" class="page__taxonomy-item" rel="tag">Post Formats</a>
+      <a href="/tags/#rails" class="page__taxonomy-item" rel="tag">rails</a>
     
     </span>
   </p>
@@ -481,14 +384,14 @@
     
       
       
-      <a href="/categories/#blog" class="page__taxonomy-item" rel="tag">Blog</a>
+      <a href="/categories/#rails" class="page__taxonomy-item" rel="tag">rails</a>
     
     </span>
   </p>
 
 
         
-  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2010-01-08T00:00:00+03:00">January 8, 2010</time></p>
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2018-02-20T15:35:35+03:00">February 20, 2018</time></p>
 
 
       </footer>
@@ -496,22 +399,22 @@
       <section class="page__share">
   
 
-  <a href="https://twitter.com/intent/tweet?text=Post%3A+Chat%20http%3A%2F%2Flocalhost%3A4000%2Fblog%2Fpost-chat%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+  <a href="https://twitter.com/intent/tweet?text=Troubleshooting+memory+leaks+in+Rails+5%20http%3A%2F%2Flocalhost%3A4000%2Frails%2FTroubleshooting-memory-leaks-in-Rails-5%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
 
-  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Fblog%2Fpost-chat%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Frails%2FTroubleshooting-memory-leaks-in-Rails-5%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
 
-  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Fblog%2Fpost-chat%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2Frails%2FTroubleshooting-memory-leaks-in-Rails-5%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
 </section>
 
 
       
   <nav class="pagination">
     
-      <a href="/blog/post-standard/" class="pagination--pager" title="Post: Standard
+      <a href="/rails/Setting-Up-Elasticsearch-In-Rails-Using-Docker/" class="pagination--pager" title="Setting up elastic search in Rails using Docker
 ">Previous</a>
     
     
-      <a href="/blog/post-notice/" class="pagination--pager" title="Post: Notice
+      <a href="/blog/welcome-to-jekyll/" class="pagination--pager" title="Welcome to Jekyll!
 ">Next</a>
     
   </nav>
@@ -562,46 +465,6 @@
 
 
     <p class="archive__item-excerpt" itemprop="description">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different wa...</p>
-  </article>
-</div>
-
-        
-          
-
-
-
-<div class="grid__item">
-  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
-    
-    <h2 class="archive__item-title no_toc" itemprop="headline">
-      
-        <a href="/rails/Troubleshooting-memory-leaks-in-Rails-5/" rel="permalink">Troubleshooting memory leaks in Rails 5
-</a>
-      
-    </h2>
-    
-
-  <p class="page__meta">
-    
-
-    
-
-    
-      
-      
-
-      <span class="page__meta-readtime">
-        <i class="far fa-clock" aria-hidden="true"></i>
-        
-          1 minute read
-        
-      </span>
-    
-  </p>
-
-
-    <p class="archive__item-excerpt" itemprop="description">So we recently did an upgrade of our application at Kopo Kopo, Inc to Rails 5.1 and Ruby 2.4.1. For an upgrade
-coming from Rails 4.0 things went well I must ...</p>
   </article>
 </div>
 
@@ -683,6 +546,46 @@ optimal (and maybe we did not set i...</p>
     <p class="archive__item-excerpt" itemprop="description">AWS RDS is really cool but… $$$
 
 </p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/rails/postgresql/Partial-Indexes-with-PostgreSQL-and-Rails/" rel="permalink">Partial Indexes with PostgreSQL and Rails
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">So what happens when you run into a situation that you really need to be paranoid about making duplicate records into the db?
+When dealing with financial sys...</p>
   </article>
 </div>
 
